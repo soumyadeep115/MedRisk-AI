@@ -1,0 +1,18 @@
+# ENV FILES (NEVER COMMIT)
+.env
+backend/.env
+
+# DEPENDENCIES
+node_modules/
+backend/node_modules/
+
+# BUILD OUTPUTS
+dist/
+build/
+
+# LOGS
+*.log
+
+# OS FILES
+.DS_Store
+Thumbs.db
