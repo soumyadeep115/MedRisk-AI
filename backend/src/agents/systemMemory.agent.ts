@@ -1,15 +1,18 @@
 import { embedText } from "../services/embedding.service";
 import { upsertMemory, searchMemory } from "../services/qdrant.service";
 
-export async function runSystemMemoryAgent(input: {
-  hospital_id: string;
-  system_risk: string;
-  contributing_agents: string[];
-}) {
+export async function runSystemMemoryAgent(input: any) {
+  // ---------- SAFETY GUARDS ----------
+  const hospital_id = input?.hospital_id ?? "UNKNOWN_HOSPITAL";
+  const system_risk = input?.system_risk ?? "UNKNOWN";
+  const contributing_agents = Array.isArray(input?.contributing_agents)
+    ? input.contributing_agents
+    : [];
+
   const snapshotText = `
-Hospital: ${input.hospital_id}
-System Risk: ${input.system_risk}
-Signals: ${input.contributing_agents.join(", ")}
+Hospital: ${hospital_id}
+System Risk: ${system_risk}
+Signals: ${contributing_agents.join(", ") || "N/A"}
 `;
 
   // ---------- EMBEDDING ----------
@@ -24,13 +27,13 @@ Signals: ${input.contributing_agents.join(", ")}
   // ---------- UPSERT MEMORY ----------
   try {
     await upsertMemory(
-      `system-${input.hospital_id}-${Date.now()}`,
+      `system-${hospital_id}-${Date.now()}`,
       embedding,
       {
-        hospital_id: input.hospital_id,
-        system_risk: input.system_risk,
-        agents: input.contributing_agents,
-        timestamp: new Date().toISOString()
+        hospital_id,
+        system_risk,
+        agents: contributing_agents,
+        timestamp_ms: Date.now(),
       }
     );
   } catch (err) {
@@ -45,15 +48,16 @@ Signals: ${input.contributing_agents.join(", ")}
     console.warn("⚠️ Qdrant search failed");
   }
 
-  // ---------- FINAL RESPONSE ----------
+  // ---------- FINAL RESPONSE (FRONTEND SAFE) ----------
   return {
-    hospital_id: input.hospital_id,
+    hospital_id,
     forecast:
-      input.system_risk === "CRITICAL"
+      system_risk === "CRITICAL"
         ? "ESCALATION LIKELY"
         : "STABLE",
     explanation:
-      "System memory agent compared current hospital state with historical crisis patterns.",
-    matched_events: pastEvents
+      "System memory agent compared current hospital state with historical patterns.",
+    events: pastEvents, // 👈 IMPORTANT: frontend expects array
+    source: "qdrant",
   };
 }

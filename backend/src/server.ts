@@ -14,9 +14,8 @@ import equipmentRoute from "./routes/agents/equipment";
 import systemRiskRoute from "./routes/agents/systemRisk";
 import decisionRoute from "./routes/agents/decision";
 import systemMemoryRoute from "./routes/agents/system-memory";
-import eventTimelineRoute from "./routes/agents/eventTimeline";
-import weatherRoute from "./routes/agents/weather";
 import eventReplayRoute from "./routes/agents/eventReplay";
+import weatherRoute from "./routes/agents/weather";
 import crowdDensityRoute from "./routes/agents/crowdDensity";
 import { cctvRouter } from "./routes/agents/cctv";
 import systemAggregatorRoute from "./routes/agents/system-aggregator";
@@ -24,12 +23,8 @@ import systemAggregatorRoute from "./routes/agents/system-aggregator";
 /* ---------- APP SETUP ---------- */
 const app = express();
 
-/* 🔥 CRITICAL: START EVENT-DRIVEN AUTO-CHAIN 🔥 */
-initSystemReevaluationOrchestrator();
-
 /* ---------- MIDDLEWARE ---------- */
 app.use(cors());
-app.options("/", cors());
 app.use(express.json());
 
 app.use((req, _res, next) => {
@@ -53,12 +48,19 @@ app.use("/api/agents/equipment", equipmentRoute);
 app.use("/api/agents/system-risk", systemRiskRoute);
 app.use("/api/agents/decision", decisionRoute);
 app.use("/api/agents/system-memory", systemMemoryRoute);
-app.use("/api/agents/event-timeline", eventTimelineRoute);
-app.use("/api/agents/weather", weatherRoute);
 app.use("/api/agents/event-replay", eventReplayRoute);
+app.use("/api/agents/weather", weatherRoute);
 app.use("/api/agents/crowd-density", crowdDensityRoute);
 app.use("/api/agents/cctv", cctvRouter);
 app.use("/api/agents/system-aggregator", systemAggregatorRoute);
+
+/* ---------- START ORCHESTRATOR SAFELY ---------- */
+try {
+  initSystemReevaluationOrchestrator();
+  console.log("🧠 System reevaluation orchestrator started");
+} catch (err) {
+  console.warn("⚠️ Orchestrator failed to start, continuing without it");
+}
 
 /* ---------- SERVER ---------- */
 const PORT = process.env.PORT || 8080;

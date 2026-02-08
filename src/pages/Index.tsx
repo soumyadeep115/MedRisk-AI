@@ -10,10 +10,12 @@ import { ResourceRiskPanel } from "@/components/dashboard/ResourceRiskPanel";
 import { PublicHealthPanel } from "@/components/dashboard/PublicHealthPanel";
 import { EquityMonitorPanel } from "@/components/dashboard/EquityMonitorPanel";
 import { StatCard } from "@/components/dashboard/RiskComponents";
-import { WeatherTrigger } from "@/components/WeatherTrigger";
 import { PreparationAlerts } from "@/components/PreparationAlerts";
 import CCTVAgentPanel from "@/components/dashboard/CCTVAgentPanel";
 import { SystemRiskPanel } from "@/components/dashboard/SystemRiskPanel";
+
+/* ✅ NEW WEATHER UI */
+import { WeatherDialog } from "@/components/WeatherDialog";
 
 import { Activity, Users, AlertTriangle, Shield } from "lucide-react";
 
@@ -38,14 +40,14 @@ const Index = () => {
       {/* ================= HOME VIEW ================= */}
       {activeView === "home" && (
         <>
-          {/* 🧠 SYSTEM RISK AGGREGATOR (TOP PRIORITY) */}
+          {/* 🧠 SYSTEM RISK AGGREGATOR */}
           <div className="mb-6">
             <SystemRiskPanel />
           </div>
 
           {/* 🔘 Manual Intelligence Triggers */}
           <div className="mb-6 space-y-4">
-            <WeatherTrigger />
+            <WeatherDialog />
             <PreparationAlerts />
           </div>
 

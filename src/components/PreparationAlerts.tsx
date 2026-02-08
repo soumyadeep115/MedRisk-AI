@@ -13,8 +13,12 @@ export function PreparationAlerts() {
 
   const latestByType = new Map<string, any>();
 
-events.forEach(e => {
-  const key = e.payload.event_type;
+const safeEvents = Array.isArray(events) ? events : [];
+
+safeEvents.forEach(e => {
+  const key = e.payload?.event_type;
+  if (!key) return;
+
   if (!latestByType.has(key)) {
     latestByType.set(key, e);
   }

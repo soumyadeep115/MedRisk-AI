@@ -7,62 +7,61 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 /* ================= CONFIG ================= */
 
 const API_BASE = "http://localhost:8080";
-const HOSPITAL_ID = "test_hospital_001";
+const HOSPITAL_ID = "HOSP_TEST_001"; // 🔴 keep consistent everywhere
 
 /* ================= TYPES ================= */
 
 type Severity = "SAFE" | "WARNING" | "CRITICAL";
 
-interface TimelineEvent {
-  payload: {
-    hospital_id: string;
-    event_type: string;
-    severity: Severity;
-    summary: string;
-    timestamp_ms: number;
-  };
+interface SystemRiskResponse {
+  hospital_id: string;
+  system_risk: Severity;
+  contributors: string[];
+  updated_at: number | null;
 }
 
 /* ================= COMPONENT ================= */
 
 export const SystemRiskPanel = () => {
   const [severity, setSeverity] = useState<Severity>("SAFE");
-  const [summary, setSummary] = useState<string>("All systems nominal.");
+  const [contributors, setContributors] = useState<string[]>([]);
   const [timestamp, setTimestamp] = useState<number | null>(null);
 
-  /* ================= FETCH SYSTEM EVENT ================= */
+  /* ================= FETCH LIVE SYSTEM RISK ================= */
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
+
     async function fetchSystemRisk() {
       try {
-        const res = await axios.get<TimelineEvent[]>(
-          `${API_BASE}/api/agents/event-replay`,
+        const res = await axios.get<SystemRiskResponse>(
+          `${API_BASE}/api/agents/system-risk/current`,
           { params: { hospital_id: HOSPITAL_ID } }
         );
 
-        const systemEvent = res.data.find(
-          (e) => e.payload?.event_type === "SYSTEM"
-        );
-
-        if (systemEvent) {
-          setSeverity(systemEvent.payload.severity);
-          setSummary(systemEvent.payload.summary);
-          setTimestamp(systemEvent.payload.timestamp_ms);
-        }
+        setSeverity(res.data.system_risk);
+        setContributors(res.data.contributors);
+        setTimestamp(res.data.updated_at);
       } catch (err) {
-        console.error("Failed to fetch system risk", err);
+        console.error("❌ Failed to fetch live system risk", err);
       }
     }
 
+    // initial fetch
     fetchSystemRisk();
+
+    // auto-refresh every 5 seconds
+    interval = setInterval(fetchSystemRisk, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   /* ================= SEVERITY STYLES ================= */
 
   const severityStyles: Record<Severity, string> = {
-    SAFE: "border-green-500 text-green-600 bg-green-50",
-    WARNING: "border-yellow-500 text-yellow-600 bg-yellow-50",
-    CRITICAL: "border-red-500 text-red-600 bg-red-50",
+    SAFE: "border-green-500 text-green-700 bg-green-50",
+    WARNING: "border-yellow-500 text-yellow-700 bg-yellow-50",
+    CRITICAL: "border-red-500 text-red-700 bg-red-50",
   };
 
   /* ================= RENDER ================= */
@@ -77,16 +76,24 @@ export const SystemRiskPanel = () => {
       </CardHeader>
 
       <CardContent>
-        <div
-          className={`rounded border p-4 ${severityStyles[severity]}`}
-        >
+        <div className={`rounded border p-4 ${severityStyles[severity]}`}>
           <div className="flex items-center gap-2 text-lg font-bold">
             <ShieldCheck className="h-5 w-5" />
             SYSTEM STATUS: {severity}
           </div>
 
           <div className="mt-2 text-sm">
-            {summary}
+            {contributors.length > 0 ? (
+              <>
+                Multiple subsystems show elevated risk. Prepare mitigation.
+                <br />
+                <span className="font-medium">
+                  Contributors: {contributors.join(", ")}
+                </span>
+              </>
+            ) : (
+              "All monitored subsystems are operating within safe thresholds."
+            )}
           </div>
 
           {timestamp && (

@@ -10,11 +10,12 @@ export interface CapacityContext {
 }
 
 export interface CapacityEvent {
-  similarity: number;
-  type: string;
-  date: string;
-  icuPeak: number;
-  outcome: string;
+  similarity?: number;
+  type?: string;
+  date?: string;
+  icuPeak?: number;
+  outcome?: string;
+  payload?: any;
 }
 
 /* ================= HOOK ================= */
@@ -30,9 +31,13 @@ export function useQdrantSearch(context: CapacityContext) {
     setError(null);
 
     try {
-      const res = await axios.post("/api/agents/capacity/search", {
-        context,
-      });
+      const res = await axios.post(
+        "http://localhost:8080/api/agents/system-memory/analyze",
+        {
+          hospital_id: "HOSP_TEST_001",
+          query: JSON.stringify(context),
+        }
+      );
 
       const data = Array.isArray(res.data?.events)
         ? res.data.events
@@ -43,7 +48,7 @@ export function useQdrantSearch(context: CapacityContext) {
     } catch (err) {
       console.error("Qdrant search failed:", err);
 
-      // fallback demo mode
+      // graceful fallback
       setEvents([]);
       setSource("demo");
       setError("Qdrant unavailable — using fallback memory");
@@ -57,10 +62,10 @@ export function useQdrantSearch(context: CapacityContext) {
   }, [fetchEvents]);
 
   return {
-    events,     // ✅ always array
-    loading,    // ✅ boolean
-    error,      // ✅ string | null
-    source,     // ✅ "qdrant" | "demo"
-    refresh: fetchEvents, // ✅ function
+    events,        // ✅ always array
+    loading,       // ✅ boolean
+    error,         // ✅ string | null
+    source,        // ✅ "qdrant" | "demo"
+    refresh: fetchEvents,
   };
 }

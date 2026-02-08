@@ -16,7 +16,7 @@ import {
 /* ================= CONFIG ================= */
 
 const API_BASE = "http://localhost:8080";
-const HOSPITAL_ID = "HOSP_001";
+const HOSPITAL_ID = "HOSP_TEST_001";
 const MAX_POINTS = 20;
 
 /* ================= TYPES ================= */
