@@ -1,9 +1,9 @@
-MedRisk AI- Deterministic Event-Driven Multi-Agent Architecture with Long-Term Vector Memory for Proactive Healthcare Risk Orchestration
+# MedRisk AI- Deterministic Event-Driven Multi-Agent Architecture with Long-Term Vector Memory for Proactive Healthcare Risk Orchestration
 
-Agentic Healthcare Risk Intelligence & Operations Platform
+## Agentic Healthcare Risk Intelligence & Operations Platform
 
 ======================================================================
-PROJECT POSITIONING
+## PROJECT POSITIONING
 ======================================================================
 
 MedRisk AI is a Deterministic, Event-Driven Multi-Agent Architecture 
@@ -14,7 +14,7 @@ operations management, transforming reactive monitoring systems into
 proactive, explainable, memory-aware healthcare infrastructure.
 
 ======================================================================
-OVERVIEW
+## OVERVIEW
 ======================================================================
 
 MedRisk AI is an Agentic, Memory-Driven Healthcare Risk Intelligence Platform 
@@ -37,7 +37,7 @@ This transforms the platform from pure intelligence into a full operational
 simulation + risk intelligence ecosystem.
 
 ======================================================================
-PROBLEM ADDRESSED
+## PROBLEM ADDRESSED
 ======================================================================
 
 Hospitals often fail not due to lack of medical expertise, but due to 
@@ -61,7 +61,7 @@ MedRisk AI unifies these signals into a single, event-driven, memory-aware
 intelligence layer that anticipates failures before they escalate.
 
 ======================================================================
-SOCIETAL IMPACT
+## SOCIETAL IMPACT
 ======================================================================
 
 MedRisk AI contributes to healthcare resilience by:
@@ -75,7 +75,7 @@ MedRisk AI contributes to healthcare resilience by:
 • Maintaining operational audit trails through soft-delete compliance  
 
 ======================================================================
-SYSTEM ARCHITECTURE
+## SYSTEM ARCHITECTURE
 ======================================================================
 
 HIGH-LEVEL FLOW
@@ -98,9 +98,9 @@ HIGH-LEVEL FLOW
 ↓  
 [Authoritative System Risk Store]  
 
-----------------------------------------------------------------------
-CAPACITY FLOW
-----------------------------------------------------------------------
+======================================================================
+## CAPACITY FLOW
+======================================================================
 
 [Patient Admit / Discharge]  
 ↓  
@@ -117,9 +117,9 @@ If availableBeds <= capacityThreshold
 → HIGH RISK  
 Else → SAFE / MODERATE  
 
-----------------------------------------------------------------------
-BILLING FLOW
-----------------------------------------------------------------------
+======================================================================
+## BILLING FLOW
+======================================================================
 
 [Patient Discharge]  
 ↓  
@@ -134,7 +134,7 @@ Capacity updated
 Risk agents reevaluated  
 
 ======================================================================
-ARCHITECTURAL PRINCIPLES
+## ARCHITECTURAL PRINCIPLES
 ======================================================================
 
 The system is:
@@ -151,7 +151,7 @@ The system is:
 • Compliance-oriented (soft delete instead of hard delete)  
 
 ======================================================================
-DETERMINISM GUARANTEE
+## DETERMINISM GUARANTEE
 ======================================================================
 MedRisk AI is designed as a strictly deterministic system.
 Determinism is enforced through the following principles:
@@ -168,7 +168,7 @@ This ensures:
 All risk agents operate on structured state inputs and produce rule-evaluated outputs.
 Vector memory is used for contextual retrieval and explainability — not for non-deterministic scoring.
 ======================================================================
-AGENTS IMPLEMENTED
+## AGENTS IMPLEMENTED
 ======================================================================
 
 Capacity Risk Agent  
@@ -207,7 +207,7 @@ Each agent:
 • Triggers system-wide reevaluation  
 
 ======================================================================
-EVENT-DRIVEN ORCHESTRATION LAYER
+## EVENT-DRIVEN ORCHESTRATION LAYER
 ======================================================================
 
 MedRisk AI uses a centralized event bus built on Node.js EventEmitter.
@@ -224,7 +224,7 @@ This ensures:
 • System risk is always consistent  
 
 ======================================================================
-AUTHORITATIVE SYSTEM RISK STATE
+## AUTHORITATIVE SYSTEM RISK STATE
 ======================================================================
 
 An in-memory authoritative risk store maintains the latest system-wide 
@@ -233,7 +233,7 @@ This eliminates ambiguity between historical memory and current
 operational state.
 
 ======================================================================
-VECTOR MEMORY (QDRANT)
+## VECTOR MEMORY (QDRANT)
 ======================================================================
 
 Qdrant serves as immutable long-term vector memory.
@@ -257,7 +257,7 @@ Distance Metric: Cosine Similarity
 Fallback vectors preserve pipeline stability when embedding APIs are unavailable.
 
 ======================================================================
-OPERATIONAL MANAGEMENT LAYER 
+## OPERATIONAL MANAGEMENT LAYER 
 ======================================================================
 
 MedRisk AI now includes a structured Hospital Operations Management Layer.
@@ -275,7 +275,7 @@ This layer handles:
 It is fully integrated with the intelligence layer through event-driven updates.
 
 ======================================================================
-DATABASE INTEGRATION
+## DATABASE INTEGRATION
 ======================================================================
 
 Structured data layer introduced using:
@@ -293,7 +293,7 @@ PostgreSQL stores:
 • Soft delete metadata  
 
 ======================================================================
-DATABASE MODELS
+## DATABASE MODELS
 ======================================================================
 
 RoomType
@@ -365,7 +365,7 @@ Alert
 • message
 
 ======================================================================
-OPERATIONAL WORKFLOWS IMPLEMENTED
+## OPERATIONAL WORKFLOWS IMPLEMENTED
 ======================================================================
 
 Patient Creation
@@ -412,7 +412,7 @@ Inventory Soft Delete
 • Preserves billing and audit history
 
 ======================================================================
-BILLING LOGIC
+## BILLING LOGIC
 ======================================================================
 
 Total Cost =
@@ -428,7 +428,7 @@ Billing is fully deterministic.
 Billing snapshots are immutable and permanently stored.
 
 ======================================================================
-TECHNOLOGY STACK
+## TECHNOLOGY STACK
 ======================================================================
 
 Backend
@@ -458,7 +458,7 @@ APIs
 • Internal REST APIs
 
 ======================================================================
-ARCHITECTURAL SEPARATION
+## ARCHITECTURAL SEPARATION
 ======================================================================
 
 MedRisk AI consists of two cleanly separated layers:
@@ -482,7 +482,7 @@ MedRisk AI consists of two cleanly separated layers:
 Communication is strictly via deterministic APIs and event emissions.
 
 ======================================================================
-API ENDPOINTS
+## API ENDPOINTS
 ======================================================================
 
 • POST /patients
@@ -492,7 +492,7 @@ API ENDPOINTS
 • POST /inventory
 
 ======================================================================
-EXAMPLE RISK OUTPUT
+## EXAMPLE RISK OUTPUT
 ======================================================================
 
 {
@@ -504,7 +504,7 @@ EXAMPLE RISK OUTPUT
 }
 
 ======================================================================
-SETUP REQUIREMENTS
+## SETUP REQUIREMENTS
 ======================================================================
 
 • Node >= X
@@ -514,7 +514,7 @@ SETUP REQUIREMENTS
 • Prisma migrate
 
 ======================================================================
-RUNNING THE PROJECT
+## RUNNING THE PROJECT
 ======================================================================
 
 Backend:
@@ -528,7 +528,7 @@ npm run dev
 Both must run simultaneously.
 
 ======================================================================
-UI DEVELOPMENT DISCLOSURE
+## UI DEVELOPMENT DISCLOSURE
 ======================================================================
 
 Lovable was used only for early UI scaffolding.
@@ -548,7 +548,7 @@ All core system logic including:
 was implemented manually.
 
 ======================================================================
-FUTURE EXTENSIONS
+## FUTURE EXTENSIONS
 ======================================================================
 
 • ICU vs General bed separation
@@ -563,7 +563,7 @@ FUTURE EXTENSIONS
 • PDF invoice generation
 
 ======================================================================
-TESTING STRATEGY
+## TESTING STRATEGY
 ======================================================================
 
 MedRisk AI includes deterministic validation and operational integrity checks.
@@ -589,7 +589,7 @@ Soft Delete Compliance Verification
 Testing philosophy prioritizes reproducibility, data integrity, and operational safety over probabilistic benchmarking.
 
 ======================================================================
-DATA RETENTION & COMPLIANCE POLICY
+## DATA RETENTION & COMPLIANCE POLICY
 ======================================================================
 
 MedRisk AI follows a strict data retention and audit-preservation policy aligned with healthcare-grade system design principles.
@@ -635,7 +635,7 @@ NO HARD DELETION POLICY
 This approach ensures MedRisk AI operates not merely as a simulation platform, but as a production-aligned healthcare operations system with full historical accountability.
 
 ======================================================================
-SCALABILITY CONSIDERATIONS
+## SCALABILITY CONSIDERATIONS
 ======================================================================
 
 MedRisk AI is architected for extensibility and horizontal growth.
@@ -660,7 +660,7 @@ Operational Database Scaling
 The architecture is designed for distributed deployment with minimal refactoring.
 
 ======================================================================
-KNOWN LIMITATIONS
+## KNOWN LIMITATIONS
 ======================================================================
 
 • Current event bus is in-memory (Node.js EventEmitter) and not distributed
@@ -675,7 +675,7 @@ KNOWN LIMITATIONS
 These limitations are intentional in the current phase and do not affect architectural correctness or deterministic guarantees. 
 
 ======================================================================
-CONCLUSION
+## CONCLUSION
 ======================================================================
 
 MedRisk AI demonstrates how agentic intelligence combined with long-term 
@@ -688,7 +688,7 @@ critical infrastructure sectors.
 
 ======================================================================
 
-END OF README
+# END OF README
 
 
 
