@@ -37,7 +37,6 @@ export const admitPatient = async (
     if (!patient.discharged && patient.roomTypeId)
       throw new Error("Patient already admitted");
 
-    /* 🔥 SAFE PARAMETERIZED ATOMIC UPDATE */
     const updated = await tx.$executeRaw`
       UPDATE "RoomType"
       SET "occupiedBeds" = "occupiedBeds" + 1
@@ -132,6 +131,25 @@ export const dischargePatient = async (patientId: string) => {
 
     const miscCost = patient.miscellaneousCost ?? 0;
     const totalCost = roomCost + medicineCost + supplyCost + miscCost;
+    await tx.billing.create({
+      data: {
+        patientId: patient.id,
+        hospitalId: patient.hospitalId,
+        stayDays: diffDays,
+        roomCost,
+        medicineCost,
+        supplyCost,
+        miscCost,
+        totalCost,
+        breakdown: {
+          roomCost,
+          medicineCost,
+          supplyCost,
+          miscCost,
+          inventoryDetails: inventoryBreakdown,
+        },
+      },
+    });
 
     /* --------- SAFE BED DECREMENT --------- */
     if (patient.roomType.occupiedBeds <= 0) {
@@ -156,19 +174,34 @@ export const dischargePatient = async (patientId: string) => {
       },
     });
 
+    /* ================= UPDATED BILLING RETURN ================= */
+
     return {
       hospitalId: patient.hospitalId,
       patientId: patient.id,
       patientName: patient.name,
       stayDays: diffDays,
-      breakdown: {
-        roomCost,
-        medicineCost,
-        supplyCost,
-        miscellaneousCost: miscCost,
-        inventoryDetails: inventoryBreakdown,
+
+      billingSummary: {
+        bedCharges: {
+          pricePerNight: patient.roomType.pricePerNight,
+          stayDays: diffDays,
+          total: roomCost,
+        },
+
+        inventoryCharges: {
+          items: inventoryBreakdown,
+          totalMedicineCost: medicineCost,
+          totalSupplyCost: supplyCost,
+          totalInventoryCost: medicineCost + supplyCost,
+        },
+
+        miscellaneousCharges: miscCost,
+
+        grandTotal: totalCost,
       },
-      totalCost,
+
+      dischargedAt: now,
     };
   });
 
@@ -202,7 +235,6 @@ export const scheduleAdmission = async (
   roomTypeId: string,
   hospitalId: string
 ) => {
-  // 🔒 Prevent duplicate scheduling
   const existing = await prisma.admissionRequest.findFirst({
     where: {
       patientId,
@@ -224,24 +256,21 @@ export const scheduleAdmission = async (
   });
 };
 
-/* ================= CAPACITY EMITTER ================= */
+/* ================= CAPACITY EMITTER (PER ROOM TYPE) ================= */
 
 const emitCapacityUpdate = async (hospitalId: string) => {
-  const totalBedsAgg = await prisma.roomType.aggregate({
-    _sum: { totalBeds: true },
+  const roomTypes = await prisma.roomType.findMany({
     where: { hospitalId },
   });
 
-  const occupiedBedsAgg = await prisma.roomType.aggregate({
-    _sum: { occupiedBeds: true },
-    where: { hospitalId },
-  });
-
-  eventBus.emit("CAPACITY_UPDATE", {
-    hospital_id: hospitalId,
-    total_beds: totalBedsAgg._sum.totalBeds || 0,
-    occupied_beds: occupiedBedsAgg._sum.occupiedBeds || 0,
-  });
+  for (const room of roomTypes) {
+    eventBus.emit("CAPACITY_UPDATE", {
+      hospital_id: hospitalId,
+      total_beds: room.totalBeds,
+      occupied_beds: room.occupiedBeds,
+      capacity_threshold: room.capacityThreshold ?? 0,
+    });
+  }
 };
 
 /* ================= CANCEL ADMISSION ================= */
@@ -252,14 +281,8 @@ export const cancelAdmission = async (patientId: string) => {
   });
 
   if (!patient) throw new Error("Patient not found");
-
-  if (patient.roomTypeId) {
-    throw new Error("Cannot cancel admitted patient");
-  }
-
-  if (patient.discharged) {
-    throw new Error("Patient already discharged");
-  }
+  if (patient.roomTypeId) throw new Error("Cannot cancel admitted patient");
+  if (patient.discharged) throw new Error("Patient already discharged");
 
   return prisma.patient.update({
     where: { id: patientId },

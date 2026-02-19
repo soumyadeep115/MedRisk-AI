@@ -7,15 +7,16 @@ datasource db {
 }
 
 model RoomType {
-  id            String   @id @default(uuid())
-  hospitalId    String
-  name          String
-  totalBeds     Int
-  occupiedBeds  Int      @default(0)
-  pricePerNight Float
-  createdAt     DateTime @default(now())
+  id                String   @id @default(uuid())
+  hospitalId        String
+  name              String
+  totalBeds         Int
+  occupiedBeds      Int      @default(0)
+  capacityThreshold Int      @default(0)   
+  pricePerNight     Float
+  createdAt         DateTime @default(now())
 
-  patients Patient[]
+  patients          Patient[]
   admissionRequests AdmissionRequest[]
 }
 
@@ -34,6 +35,7 @@ model Patient {
   roomType        RoomType?         @relation(fields: [roomTypeId], references: [id])
   inventoryLinks  PatientInventory[]
   admissionRequests AdmissionRequest[]   // ✅ ADD THIS
+  billings Billing[]
 }
 
 model InventoryItem {
@@ -45,6 +47,10 @@ model InventoryItem {
   quantity   Int
   threshold  Int?
   createdAt  DateTime          @default(now())
+
+  // ✅ SOFT DELETE FIELDS
+  isDeleted  Boolean           @default(false)
+  deletedAt  DateTime?
 
   patientLinks PatientInventory[]
 }
@@ -89,4 +95,22 @@ enum AdmissionStatus {
   PENDING
   CONFIRMED
   CANCELLED
+}
+
+model Billing {
+  id           String   @id @default(uuid())
+  patientId    String
+  hospitalId   String
+
+  stayDays     Int
+  roomCost     Float
+  medicineCost Float
+  supplyCost   Float
+  miscCost     Float
+  totalCost    Float
+
+  breakdown    Json     // full snapshot
+  createdAt    DateTime @default(now())
+
+  patient      Patient  @relation(fields: [patientId], references: [id])
 }

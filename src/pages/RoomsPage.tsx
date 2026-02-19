@@ -7,6 +7,7 @@ interface RoomType {
   totalBeds: number;
   occupiedBeds: number;
   pricePerNight: number;
+  capacityThreshold: number; // ✅ NEW
 }
 
 const HOSPITAL_ID = "HOSP_TEST_001";
@@ -16,6 +17,7 @@ export default function RoomsPage() {
   const [name, setName] = useState("");
   const [totalBeds, setTotalBeds] = useState<number>(0);
   const [pricePerNight, setPricePerNight] = useState<number>(0);
+  const [capacityThreshold, setCapacityThreshold] = useState<number>(0); // ✅ NEW
 
   const fetchRooms = async () => {
     const res = await axios.get(`/rooms/${HOSPITAL_ID}`);
@@ -30,11 +32,13 @@ export default function RoomsPage() {
       name,
       totalBeds,
       pricePerNight,
+      capacityThreshold, // ✅ SEND IT
     });
 
     setName("");
     setTotalBeds(0);
     setPricePerNight(0);
+    setCapacityThreshold(0); // ✅ RESET
     fetchRooms();
   };
 
@@ -55,7 +59,9 @@ export default function RoomsPage() {
       <div className="bg-card border rounded-2xl p-6 shadow-sm space-y-6">
         <h2 className="text-xl font-semibold">Create Room Type</h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* 4 columns now instead of 3 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
           <div>
             <label className="text-sm font-medium block mb-2">
               Room Name
@@ -90,6 +96,26 @@ export default function RoomsPage() {
               value={pricePerNight}
               onChange={(e) => setPricePerNight(Number(e.target.value))}
             />
+          </div>
+
+          {/* ✅ NEW THRESHOLD FIELD */}
+          <div>
+            <label className="text-sm font-medium block mb-2">
+              Capacity Risk Threshold
+            </label>
+            <input
+              type="number"
+              min={0}
+              className="w-full border rounded-lg px-3 py-2"
+              value={capacityThreshold}
+              onChange={(e) =>
+                setCapacityThreshold(Number(e.target.value))
+              }
+              placeholder="e.g. 2"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              If available beds ≤ this value, capacity risk becomes CRITICAL.
+            </p>
           </div>
         </div>
 
@@ -132,6 +158,11 @@ export default function RoomsPage() {
 
             <p className="font-medium">
               ₹ {room.pricePerNight} / night
+            </p>
+
+            {/* ✅ Show threshold */}
+            <p className="text-sm text-muted-foreground">
+              Risk Threshold: {room.capacityThreshold}
             </p>
           </div>
         ))}

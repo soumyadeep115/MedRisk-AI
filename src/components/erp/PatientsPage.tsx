@@ -64,6 +64,8 @@ export function PatientsPage() {
     const [showScheduleDialog, setShowScheduleDialog] = useState(false);
     const [pendingPatientId, setPendingPatientId] = useState<string | null>(null);
     const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
+    const [billingData, setBillingData] = useState<any>(null);
+    const [showBillingModal, setShowBillingModal] = useState(false);
 
     const [newPatient, setNewPatient] = useState({
         name: "",
@@ -144,8 +146,27 @@ export function PatientsPage() {
         }
     };
 
+    const handleDischarge = async (id: string) => {
+        try {
+            const res = await axios.post(`${API_BASE}/patients/discharge`, {
+                patientId: id,
+            });
+
+            setBillingData(res.data);
+            setShowBillingModal(true);
+
+            fetchPatients();
+            fetchRooms();
+        } catch (err) {
+            console.error("Discharge failed:", err);
+        }
+    };
+
+
+
     return (
         <div className="space-y-6">
+
             <Card>
                 <CardHeader className="flex flex-row justify-between items-center">
                     <CardTitle>Patients Management</CardTitle>
@@ -163,13 +184,18 @@ export function PatientsPage() {
                 </TabsList>
 
                 <TabsContent value="all">
-                    <PatientTable patients={patients} refresh={fetchPatients} />
+                    <PatientTable
+                        patients={patients}
+                        refresh={fetchPatients}
+                        onDischarge={handleDischarge}
+                    />
                 </TabsContent>
 
                 <TabsContent value="admitted">
                     <PatientTable
                         patients={patients.filter((p) => !p.discharged)}
                         refresh={fetchPatients}
+                        onDischarge={handleDischarge}
                     />
                 </TabsContent>
 
@@ -177,6 +203,7 @@ export function PatientsPage() {
                     <PatientTable
                         patients={patients.filter((p) => p.discharged)}
                         refresh={fetchPatients}
+                        onDischarge={handleDischarge}
                     />
                 </TabsContent>
             </Tabs>
@@ -236,7 +263,7 @@ export function PatientsPage() {
                 </DialogContent>
             </Dialog>
 
-            {/* 🔥 SCHEDULE ADMISSION DIALOG (INSIDE COMPONENT) */}
+            {/* 🔥 SCHEDULE ADMISSION DIALOG */}
 
             <Dialog open={showScheduleDialog} onOpenChange={setShowScheduleDialog}>
                 <DialogContent>
@@ -276,6 +303,62 @@ export function PatientsPage() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* ================= BILLING SUMMARY MODAL ================= */}
+
+            {billingData && (
+                <Dialog open={showBillingModal} onOpenChange={setShowBillingModal}>
+                    <DialogContent className="max-w-xl">
+                        <DialogHeader>
+                            <DialogTitle>Billing Summary</DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+
+                            <div>
+                                <h3 className="font-semibold">Bed Charges</h3>
+                                <p>
+                                    ₹ {billingData.billingSummary.bedCharges.pricePerNight}
+                                    {" × "}
+                                    {billingData.billingSummary.bedCharges.stayDays} days
+                                </p>
+                                <p className="font-medium">
+                                    ₹ {billingData.billingSummary.bedCharges.total}
+                                </p>
+                            </div>
+
+                            <div>
+                                <h3 className="font-semibold">Inventory Charges</h3>
+                                {billingData.billingSummary.inventoryCharges.items.map(
+                                    (item: any, index: number) => (
+                                        <div key={index} className="text-sm">
+                                            {item.itemName} ({item.quantityUsed} × ₹{item.unitCost})
+                                            {" = "}
+                                            ₹{item.total}
+                                        </div>
+                                    )
+                                )}
+                                <p className="font-medium mt-1">
+                                    ₹ {billingData.billingSummary.inventoryCharges.totalInventoryCost}
+                                </p>
+                            </div>
+
+                            <div>
+                                <h3 className="font-semibold">Miscellaneous</h3>
+                                <p>₹ {billingData.billingSummary.miscellaneousCharges}</p>
+                            </div>
+
+                            <hr />
+
+                            <div className="text-lg font-bold text-right">
+                                Grand Total: ₹ {billingData.billingSummary.grandTotal}
+                            </div>
+
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
         </div>
     );
 }
@@ -285,9 +368,11 @@ export function PatientsPage() {
 function PatientTable({
     patients,
     refresh,
+    onDischarge,
 }: {
     patients: Patient[];
     refresh: () => void;
+    onDischarge: (id: string) => void;
 }) {
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<string | null>(null);
@@ -306,16 +391,7 @@ function PatientTable({
         fetchInventory();
     }, []);
 
-    const discharge = async (id: string) => {
-        try {
-            await axios.post(`${API_BASE}/patients/discharge`, {
-                patientId: id,
-            });
-            refresh();
-        } catch (error) {
-            console.error("Discharge failed:", error);
-        }
-    };
+
 
     const assignInventory = async () => {
         if (!selectedPatient || !selectedItem) return;
@@ -384,7 +460,7 @@ function PatientTable({
                                                 <Button
                                                     size="sm"
                                                     variant="destructive"
-                                                    onClick={() => discharge(p.id)}
+                                                    onClick={() => onDischarge(p.id)}
                                                 >
                                                     Discharge
                                                 </Button>

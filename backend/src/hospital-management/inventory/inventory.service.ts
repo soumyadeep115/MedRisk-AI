@@ -99,11 +99,13 @@ export const getInventoryByHospital = async (
   hospitalId: string
 ) => {
   return prisma.inventoryItem.findMany({
-    where: { hospitalId },
+    where: { 
+      hospitalId,
+      isDeleted: false   // 👈 ADD THIS
+    },
     orderBy: { name: "asc" },
   });
 };
-
 /* ================= UPDATE INVENTORY QUANTITY ================= */
 
 export const updateInventoryQuantity = async (
@@ -116,10 +118,14 @@ export const updateInventoryQuantity = async (
   });
 };
 
-/* ================= DELETE INVENTORY ITEM ================= */
+/* ================= SOFT DELETE INVENTORY ITEM ================= */
 
 export const deleteInventoryItem = async (id: string) => {
-  return prisma.inventoryItem.delete({
+  return prisma.inventoryItem.update({
     where: { id },
+    data: {
+      isDeleted: true,
+      deletedAt: new Date(),
+    },
   });
 };
