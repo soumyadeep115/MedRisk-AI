@@ -5,9 +5,12 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface EquipmentRiskInput {
   hospital_id: string;
-  equipment_utilization: number;
-  critical_equipment_down: number;
-  maintenance_delay_days: number;
+  equipment_utilization?: number;
+  critical_equipment_down?: number;
+  maintenance_delay_days?: number;
+
+  // NEW: inventory-driven signal
+  inventory_shortage?: boolean;
 }
 
 export interface EquipmentRiskOutput {
@@ -25,35 +28,50 @@ export function runEquipmentRiskAgent(
   const drivers: string[] = [];
   let riskScore = 0;
 
-  if (input.equipment_utilization > 90) {
+  const utilization = input.equipment_utilization ?? 0;
+  const criticalDown = input.critical_equipment_down ?? 0;
+  const maintenanceDelay = input.maintenance_delay_days ?? 0;
+
+  /* ---------- UTILIZATION ---------- */
+  if (utilization > 90) {
     drivers.push("Equipment utilization exceeds 90%");
     riskScore += 2;
-  } else if (input.equipment_utilization > 80) {
+  } else if (utilization > 80) {
     drivers.push("High equipment utilization (>80%)");
     riskScore += 1;
   }
 
-  if (input.critical_equipment_down >= 3) {
+  /* ---------- CRITICAL EQUIPMENT DOWN ---------- */
+  if (criticalDown >= 3) {
     drivers.push("Multiple critical equipment units unavailable");
     riskScore += 3;
-  } else if (input.critical_equipment_down >= 1) {
+  } else if (criticalDown >= 1) {
     drivers.push("Some critical equipment unavailable");
     riskScore += 1;
   }
 
-  if (input.maintenance_delay_days >= 5) {
+  /* ---------- MAINTENANCE BACKLOG ---------- */
+  if (maintenanceDelay >= 5) {
     drivers.push("Maintenance backlog exceeds 5 days");
     riskScore += 2;
-  } else if (input.maintenance_delay_days >= 3) {
+  } else if (maintenanceDelay >= 3) {
     drivers.push("Maintenance delays detected");
     riskScore += 1;
   }
 
+  /* ---------- INVENTORY SHORTAGE SIGNAL ---------- */
+  if (input.inventory_shortage) {
+    drivers.push("Critical medical inventory below threshold");
+    riskScore += 2;
+  }
+
+  /* ---------- RISK LEVEL ---------- */
   let risk_level: "SAFE" | "WARNING" | "CRITICAL" = "SAFE";
 
   if (riskScore >= 5) risk_level = "CRITICAL";
   else if (riskScore >= 2) risk_level = "WARNING";
 
+  /* ---------- EXPLANATION ---------- */
   let explanation = "Equipment operations are within safe limits.";
 
   if (risk_level === "WARNING") {
@@ -63,7 +81,7 @@ export function runEquipmentRiskAgent(
 
   if (risk_level === "CRITICAL") {
     explanation =
-      "High operational failure risk due to equipment overuse, unavailable critical devices, and maintenance backlog.";
+      "High operational failure risk due to equipment strain, unavailable devices, or inventory shortage.";
   }
 
   const timestamp_ms = Date.now();

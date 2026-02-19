@@ -32,7 +32,10 @@ export type ActiveView =
   | "reports"
   | "memory"
   | "settings"
-  | "help";
+  | "help"
+  | "operations_patients"
+  | "operations_inventory"
+  | "operations_rooms";
 
 interface CommandSidebarProps {
   activeView: ActiveView;
@@ -72,6 +75,9 @@ const mainNavItems: NavItem[] = [
   { icon: Package, label: "Resource Risk", view: "resource", agentColor: "agent-resource" },
   { icon: TrendingUp, label: "Public Health", view: "public", agentColor: "agent-public" },
   { icon: Scale, label: "Equity Monitor", view: "equity", agentColor: "agent-equity" },
+  { icon: Users, label: "Patients", view: "operations_patients" },
+  { icon: Package, label: "Inventory", view: "operations_inventory" },
+  { icon: Activity, label: "Rooms", view: "operations_rooms" },
 ];
 
 const secondaryNavItems: NavItem[] = [

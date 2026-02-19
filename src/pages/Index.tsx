@@ -13,10 +13,10 @@ import { StatCard } from "@/components/dashboard/RiskComponents";
 import { PreparationAlerts } from "@/components/PreparationAlerts";
 import CCTVAgentPanel from "@/components/dashboard/CCTVAgentPanel";
 import { SystemRiskPanel } from "@/components/dashboard/SystemRiskPanel";
-
-/* ✅ NEW WEATHER UI */
 import { WeatherDialog } from "@/components/WeatherDialog";
-
+import { PatientsPage } from "@/components/erp/PatientsPage";
+import RoomsPage from "@/pages/RoomsPage";
+import InventoryPage from "@/pages/InventoryPage";
 import { Activity, Users, AlertTriangle, Shield } from "lucide-react";
 
 const Index = () => {
@@ -28,6 +28,9 @@ const Index = () => {
     | "resource"
     | "public"
     | "equity"
+    | "operations_patients"
+    | "operations_inventory"
+    | "operations_rooms"
   >("home");
 
   return (
@@ -104,13 +107,21 @@ const Index = () => {
         </>
       )}
 
-      {/* ================= INDIVIDUAL VIEWS ================= */}
+      {/* ================= INDIVIDUAL AI VIEWS ================= */}
       {activeView === "capacity" && <CapacityAgentPanel />}
       {activeView === "staff" && <StaffBurnoutPanel />}
       {activeView === "patient" && <PatientExperiencePanel />}
       {activeView === "resource" && <ResourceRiskPanel />}
       {activeView === "public" && <PublicHealthPanel />}
       {activeView === "equity" && <EquityMonitorPanel />}
+
+      {/* ================= ERP VIEWS ================= */}
+      
+      {activeView === "operations_patients" && <PatientsPage />}
+
+      {activeView === "operations_inventory" && <InventoryPage />}
+
+      {activeView === "operations_rooms" && <RoomsPage />}
     </MainLayout>
   );
 };

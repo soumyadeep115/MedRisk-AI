@@ -4,10 +4,13 @@ dotenv.config(); // MUST be first
 import express from "express";
 import cors from "cors";
 
+require("./agents/capacity.agent");
+
 /* ---------- AUTO-CHAIN ORCHESTRATOR ---------- */
 import { initSystemReevaluationOrchestrator } from "./orchestrator/systemReevaluation.orchestrator";
 
 /* ---------- ROUTES ---------- */
+
 import capacityRoute from "./routes/agents/capacity";
 import staffBurnoutRoute from "./routes/agents/staffBurnout";
 import equipmentRoute from "./routes/agents/equipment";
@@ -19,6 +22,9 @@ import weatherRoute from "./routes/agents/weather";
 import crowdDensityRoute from "./routes/agents/crowdDensity";
 import { cctvRouter } from "./routes/agents/cctv";
 import systemAggregatorRoute from "./routes/agents/system-aggregator";
+import roomRoutes from "./hospital-management/rooms/room.routes";
+import patientRoutes from "./hospital-management/patients/patient.routes";
+import inventoryRoutes from "./hospital-management/inventory/inventory.routes";
 
 /* ---------- APP SETUP ---------- */
 const app = express();
@@ -53,6 +59,9 @@ app.use("/api/agents/weather", weatherRoute);
 app.use("/api/agents/crowd-density", crowdDensityRoute);
 app.use("/api/agents/cctv", cctvRouter);
 app.use("/api/agents/system-aggregator", systemAggregatorRoute);
+app.use("/api/rooms", roomRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 /* ---------- START ORCHESTRATOR SAFELY ---------- */
 try {

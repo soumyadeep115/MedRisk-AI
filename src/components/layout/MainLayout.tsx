@@ -2,14 +2,17 @@ import { ReactNode } from "react";
 import { CommandSidebar } from "./CommandSidebar";
 import { CommandHeader } from "./CommandHeader";
 
-type ActiveView =
+export type ActiveView =
   | "home"
   | "capacity"
   | "staff"
   | "patient"
   | "resource"
   | "public"
-  | "equity";
+  | "equity"
+  | "operations_patients"
+  | "operations_inventory"
+  | "operations_rooms";
 
 interface MainLayoutProps {
   children: ReactNode;

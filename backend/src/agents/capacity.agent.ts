@@ -6,6 +6,7 @@ import {
 import { runEventTimelineAgent } from "./eventTimeline.agent";
 import { eventBus } from "../orchestrator/eventBus";
 import { v4 as uuidv4 } from "uuid";
+console.log("🔥 Capacity Agent Module Loaded");
 
 /* ================= TYPES ================= */
 
@@ -34,40 +35,28 @@ export async function runCapacityRiskAgent(input: CapacityInput) {
   /* ---------- 1. Semantic context ---------- */
   const context = `
 Hospital: ${input.hospital_id}
-ICU utilization: ${input.icu}%
-Bed utilization: ${input.beds}%
-Staff utilization: ${input.staff}%
+Occupancy: ${input.beds}%
 External risk: ${input.external_risk?.source ?? "NONE"}
 External severity: ${input.external_risk?.severity ?? "NONE"}
 `;
 
   const embedding = await embedText(context);
 
-  /* ---------- 2. Store snapshot (LONG-TERM MEMORY) ---------- */
-  await upsertMemory(uuidv4(), embedding, {
-    hospital_id: input.hospital_id,
-    agent: "CAPACITY",
-    icu: input.icu,
-    beds: input.beds,
-    staff: input.staff,
-    external_risk: input.external_risk ?? null,
-    risk_level: null, // filled after evaluation
-    timestamp_ms,
-  });
-
-  /* ---------- 3. Historical comparison ---------- */
+  /* ---------- 2. Historical comparison ---------- */
   const similarEvents = await searchMemory(embedding, 3);
 
-  /* ---------- 4. Capacity risk logic ---------- */
+  /* ---------- 3. Capacity risk logic (Occupancy-Based) ---------- */
   let risk_level: "SAFE" | "WARNING" | "CRITICAL" = "SAFE";
 
-  if (input.icu > 85 || input.beds > 90) {
+  const occupancy = input.beds;
+
+  if (occupancy > 95) {
     risk_level = "CRITICAL";
-  } else if (input.icu > 70 || input.beds > 75) {
+  } else if (occupancy > 85) {
     risk_level = "WARNING";
   }
 
-  /* ---------- 5. External risk escalation ---------- */
+  /* ---------- 4. External risk escalation ---------- */
   if (input.external_risk?.severity === "CRITICAL") {
     risk_level = "CRITICAL";
   } else if (
@@ -77,12 +66,22 @@ External severity: ${input.external_risk?.severity ?? "NONE"}
     risk_level = "WARNING";
   }
 
+  /* ---------- 5. Store snapshot (LONG-TERM MEMORY) ---------- */
+  await upsertMemory(uuidv4(), embedding, {
+    hospital_id: input.hospital_id,
+    agent: "CAPACITY",
+    occupancy,
+    external_risk: input.external_risk ?? null,
+    risk_level,
+    timestamp_ms,
+  });
+
   /* ---------- 6. Preparation guidance + TIMELINE ---------- */
   if (risk_level !== "SAFE") {
     const summary =
       risk_level === "WARNING"
-        ? "Capacity warning: review bed turnover, prepare ICU step-up beds, ensure oxygen pipeline readiness, alert duty administrators."
-        : "Capacity CRITICAL: activate surge protocol, free ICU beds, increase oxygen reserves, mobilize backup staff, alert emergency intake.";
+        ? "Capacity warning: review bed turnover, prepare overflow beds, alert administrators."
+        : "Capacity CRITICAL: activate surge protocol, free beds immediately, mobilize backup staff, alert emergency intake.";
 
     await runEventTimelineAgent({
       hospital_id: input.hospital_id,
@@ -93,7 +92,7 @@ External severity: ${input.external_risk?.severity ?? "NONE"}
     });
   }
 
-  /* ---------- 7. AUTO-CHAIN EVENT (PHASE B COMPLETE) ---------- */
+  /* ---------- 7. AUTO-CHAIN EVENT ---------- */
   eventBus.emitAgentStateUpdate({
     event_type: "AGENT_STATE_UPDATED",
     source_agent: "CAPACITY",
@@ -108,11 +107,46 @@ External severity: ${input.external_risk?.severity ?? "NONE"}
     hospital_id: input.hospital_id,
     risk_level,
     explanation:
-      `Capacity risk evaluated using ICU (${input.icu}%), beds (${input.beds}%), staff (${input.staff}%)` +
+      `Capacity risk evaluated using occupancy (${occupancy}%).` +
       (input.external_risk
-        ? ` with external ${input.external_risk.source} risk (${input.external_risk.severity}).`
-        : "."),
+        ? ` External ${input.external_risk.source} risk (${input.external_risk.severity}) applied.`
+        : ""),
     matched_events: similarEvents,
     timestamp_ms,
   };
 }
+
+/* ================= ERP CAPACITY INTEGRATION ================= */
+
+eventBus.on(
+  "CAPACITY_UPDATE",
+  async (data: {
+    hospital_id: string;
+    total_beds: number;
+    occupied_beds: number;
+  }) => {
+    try {
+      const { hospital_id, total_beds, occupied_beds } = data;
+
+      if (!total_beds || total_beds === 0) return;
+
+      const occupancyPercent =
+        (occupied_beds / total_beds) * 100;
+
+      console.log("🛏️ ERP Capacity Update:", {
+        hospital_id,
+        occupancyPercent,
+      });
+
+      await runCapacityRiskAgent({
+        hospital_id,
+        icu: occupancyPercent,  // kept for compatibility
+        beds: occupancyPercent,
+        staff: 0,
+      });
+
+    } catch (err) {
+      console.error("ERP Capacity Integration Error:", err);
+    }
+  }
+);

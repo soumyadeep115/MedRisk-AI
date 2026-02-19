@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model RoomType {
+  id            String   @id @default(uuid())
+  hospitalId    String
+  name          String
+  totalBeds     Int
+  occupiedBeds  Int      @default(0)
+  pricePerNight Float
+  createdAt     DateTime @default(now())
+
+  patients Patient[]
+  admissionRequests AdmissionRequest[]
+}
+
+model Patient {
+  id                String    @id @default(uuid())
+  hospitalId        String
+  name              String
+  age               Int
+  gender            String
+  admittedAt        DateTime?
+  dischargedAt      DateTime?
+  discharged        Boolean   @default(false)
+  roomTypeId        String?
+  miscellaneousCost Float     @default(0)
+
+  roomType        RoomType?         @relation(fields: [roomTypeId], references: [id])
+  inventoryLinks  PatientInventory[]
+  admissionRequests AdmissionRequest[]   // ✅ ADD THIS
+}
+
+model InventoryItem {
+  id         String            @id @default(uuid())
+  hospitalId String
+  name       String
+  category   InventoryCategory
+  unitCost   Float
+  quantity   Int
+  threshold  Int?
+  createdAt  DateTime          @default(now())
+
+  patientLinks PatientInventory[]
+}
+
+model PatientInventory {
+  id           String @id @default(uuid())
+  patientId    String
+  inventoryId  String
+  quantityUsed Int
+
+  patient   Patient       @relation(fields: [patientId], references: [id])
+  inventory InventoryItem @relation(fields: [inventoryId], references: [id])
+}
+
+model Alert {
+  id         String   @id @default(uuid())
+  hospitalId String
+  type       String
+  message    String
+  createdAt  DateTime @default(now())
+}
+
+enum InventoryCategory {
+  MEDICINE
+  SUPPLY
+}
+
+model AdmissionRequest {
+  id          String   @id @default(uuid())
+  hospitalId  String
+  patientId   String
+  roomTypeId  String
+  status      AdmissionStatus @default(PENDING)
+  scheduledAt DateTime?
+  createdAt   DateTime @default(now())
+
+  patient  Patient   @relation(fields: [patientId], references: [id])
+  roomType RoomType  @relation(fields: [roomTypeId], references: [id])
+}
+
+enum AdmissionStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}

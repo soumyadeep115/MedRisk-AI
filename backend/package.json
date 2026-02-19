@@ -4,19 +4,19 @@
   "description": "MedRisk AI backend – agentic healthcare risk intelligence",
   "main": "dist/server.js",
   "type": "commonjs",
-
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
   },
-
   "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.4.0",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.2.4",
     "express": "^5.2.1",
+    "prisma": "^7.3.0",
     "uuid": "^9.0.1"
   },
-
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.9",
