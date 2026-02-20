@@ -184,7 +184,7 @@ Staff Burnout Agent<br>
 • Evaluates workload, overtime, absence<br>
 
 Equipment Risk Agent<br>
-• Evaluates equipment utilization and inventory shortage<br>
+• Evaluates inventory shortage triggered by threshold breaches<br>
 • Auto-triggered on low stock threshold breach<br>
 
 Weather Risk Agent<br>
